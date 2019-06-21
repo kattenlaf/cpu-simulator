@@ -1,0 +1,34 @@
+Gordon, Ruel
+King, Matthew,
+Lewis, LeAnn
+
+Successes:
+- The components decode, execute, memory and writeback were implemented as correct as possible
+- Smaller components like multiplexor, ALU and adders were implemented and used when needed
+- We were able to generate the 1024 instructions and data needed, and pass them to their corresponding arrays
+- addi, add, sub, or, and, andi, ori, slt was properly implemented
+- multiple abstract data types were created to represent that of the unique parts of the cpu example ID_EX_Buffer, MEM_WB_Buffer
+- The functions met the requirements of calling helper functions to assist with the readability of the code
+
+Shortcomings:
+- Program was incomplete along the lines of not finishing decode 100%
+- Not all the functions were implemented, example jump and branch as yet
+- We were not quite finished with making the cycle and instruction counters
+- Perhaps more ADTs could have been used to help with the presentation of the program
+
+***********************************************************************************
+
+Matthew King 
+- Was pivotal in assigning the work loads amongst the team members
+- Implementing the add, addi, sub, or functions
+- Writing decode and assisting team members with other areas
+
+Ruel Gordon 
+- Implemented the ALU, execute, multiplexor etc concerning the execute stage
+- stitching together the helper functions for memory and writeback
+- Generating the instruction sets
+
+LeAnn Lewis
+- implemented the helper functions for the memory and writeback stages
+- started on instruction fetch
+- assisted with some other functions as well as starting on jump and branch functions

@@ -1,0 +1,149 @@
+commit 122f5e47b1addb8f01bc0bcac53cd7b8b4f5411d
+Author: MatthewKing98 <matthewsky98@gmail.com>
+Date:   Tue Apr 24 13:58:13 2018 -0400
+
+    final version
+
+commit fff49c09324fca3ed2de41b42e801359c10b6b6b
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Tue Apr 24 17:31:48 2018 +0000
+
+    program.sim created online with Bitbucket
+
+commit 23d46a72384eda515960961330b585986fb1d11b
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Tue Apr 24 17:29:38 2018 +0000
+
+    Makefile created online with Bitbucket
+
+commit 722a4444b86583a0babd756102c952dbda004f9a
+Author: MatthewKing98 <matthewsky98@gmail.com>
+Date:   Tue Apr 24 13:27:59 2018 -0400
+
+    preparing project for submission
+
+commit 334db2b18f8cde2c306c19b2e44b982b10b6a639
+Author: MatthewKing98 <matthewsky98@gmail.com>
+Date:   Mon Apr 23 04:12:16 2018 -0400
+
+    all for possible cases for data cache added to mem phase
+
+commit 100fd4adf2fb9c3d00422f05525bfd534509aebb
+Author: MatthewKing98 <matthewsky98@gmail.com>
+Date:   Sun Apr 22 00:57:27 2018 -0400
+
+    added read hit, write hit
+
+commit 28b87e0796d32cccf6dd130c5315d84d4949c283
+Author: MatthewKing98 <matthewsky98@gmail.com>
+Date:   Sat Apr 21 23:30:40 2018 -0400
+
+    added ability to handle read misses to data cache
+
+commit dc8186e15b3a81b63151fad24815fc13fe6c5f45
+Author: MatthewKing98 <matthewsky98@gmail.com>
+Date:   Sat Apr 21 01:27:25 2018 -0400
+
+    added dirty bit
+
+commit e7420a43c65dbcee8f58de2fa5e70c2cca371096
+Author: MatthewKing98 <matthewsky98@gmail.com>
+Date:   Wed Apr 18 17:00:28 2018 -0400
+
+    Added initialization functions for both associative and direct caches
+
+commit 4fca58e4c2a952142a08e67b80245e9623460bdd
+Author: MatthewKing98 <matthewsky98@gmail.com>
+Date:   Mon Apr 16 16:41:23 2018 -0400
+
+    removed basic warnings associated with open cases and improper casting
+
+commit 44f154664a2dfc499ebd736009168fd75c0e16cd
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Mon Apr 16 00:32:32 2018 -0400
+
+    no message
+
+commit ef2624f73c5d1a96c3e5f105d79bd11f065c6049
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sun Apr 15 21:24:31 2018 +0000
+
+    syscall.c edited online with Bitbucket
+
+commit d54cdc45863ad37333619d1c0b5f4f8891dedcc1
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sun Apr 15 21:23:54 2018 +0000
+
+    single-cycle.c edited online with Bitbucket
+
+commit f3a8009930a53cf7f95ce2c7835303f92cca8d58
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sun Apr 15 21:23:13 2018 +0000
+
+    memory.h edited online with Bitbucket
+
+commit 86b9cb1644f012700d4efac4ac76bf5cfec214d6
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sun Apr 15 21:22:49 2018 +0000
+
+    memory.c edited online with Bitbucket
+
+commit 446e163adc99061250918a43697f9556f9a2ce70
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sun Apr 15 21:22:21 2018 +0000
+
+    cpu.h edited online with Bitbucket
+
+commit 3b74e3a2be03c591e660db6a241236f154a22ff3
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sun Apr 15 21:21:36 2018 +0000
+
+    cpu.c edited online with Bitbucket - Ruel
+
+commit 017ec4b20f3468683a5df8fa64c3edb934d61f0c
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sat Mar 31 08:07:36 2018 +0000
+
+    single-cycle.c created online with Bitbucket
+
+commit cdbc9f261a9c603b890486837408d919312bc7be
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sat Mar 31 08:07:04 2018 +0000
+
+    syscall.h created online with Bitbucket
+
+commit 109debbe5267bd3117357685ffd14075e84f4d1f
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sat Mar 31 08:06:46 2018 +0000
+
+    syscall.c created online with Bitbucket
+
+commit d5e99de0d1de35fee7c3ef9895d556f050e33f55
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sat Mar 31 08:04:22 2018 +0000
+
+    memory.h created online with Bitbucket
+
+commit 75ac967c5eb0f6e56a51372e6a10cb3b34142d9f
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sat Mar 31 08:03:59 2018 +0000
+
+    memory.c created online with Bitbucket
+
+commit 7d99e233d48e89c70ce481a3507f667dadb534c0
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sat Mar 31 08:03:25 2018 +0000
+
+    cpu.h created online with Bitbucket
+
+commit 6519749e011fa413e4a33bc9e6fb5a1ce8463a11
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sat Mar 31 07:59:31 2018 +0000
+
+    cpu.c created online with Bitbucket
+
+commit 1eb1cfabedfaebe503a1c5534e81ab302db22b5a
+Author: Ruel Gordon <ruel.gordon@bison.howard.edu>
+Date:   Sat Mar 31 07:54:40 2018 +0000
+
+    Initial commit
