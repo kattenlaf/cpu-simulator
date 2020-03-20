@@ -120,6 +120,7 @@ int main(int argc, char *argv[])
 		if (if_id.instruction == 0) {
 			break;
 		}
+		printf("INSTRUCTION: %X\n", if_id.instruction);
 		decode(&if_id, &id_ex);
 		execute(&id_ex, &ex_mem);
 		memory_with_cache(&ex_mem, &mem_wb);

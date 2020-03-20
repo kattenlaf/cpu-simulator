@@ -165,3 +165,7 @@ void initializeDataCache();
 void initializeInstructionCache();
 uint32_t findSetNumber(uint32_t address);
 void evictWord(uint32_t memAddress);
+/* 
+* Functions for quality of life printing
+*/
+void formatInstructionTelemetry(InstructionComponents instruction);

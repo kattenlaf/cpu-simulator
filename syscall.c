@@ -57,8 +57,9 @@ int syscall(ID_EX_buffer *ID_EX, struct cpu_context CPU) //num is the v0 registe
 	{
 		uint32_t CharAddr = CPU.GPR[4]; //$a0 in the case of a string stores the address of the first character in the string
 										// Assuming that the address index will convert by design
-		CharAddr = convertMemoryAddressToMemoryIndex(CharAddr); //Making this be the address of the characters in data_mem assuming it will convert by design
 
+		CharAddr = convertMemoryAddressToMemoryIndex(CharAddr); //Making this be the address of the characters in data_mem assuming it will convert by design
+		printf("Char address is %X\n", CharAddr);
 		char letter = data_memory[CharAddr];
 
 		while (1)

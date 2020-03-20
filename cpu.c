@@ -72,6 +72,7 @@ int decode(struct IF_ID_buffer *in, ID_EX_buffer *out)
 		}
 	}
 
+	// formatInstructionTelemetry(currentInstruction);
 	if (currentInstruction.opCode == 0 && currentInstruction.funct == 12) //Syscall
 	{
 		syscall(out, cpu_ctx);
@@ -121,4 +122,16 @@ int writeback(struct MEM_WB_buffer *in)
 {
 	write_register((*in).writeAddressIType, (*in).writeAddressRType, in->memdata, in->ALUresult, in->signals.writeBackPhase.RegWrite, in->signals.exPhase.RegDst, in->signals.writeBackPhase.MemtoReg, cpu_ctx.GPR);
 	return 0;
+}
+
+void formatInstructionTelemetry(InstructionComponents instruction) {
+	printf("currentInstruction opCode = %d\n", instruction.opCode);
+	printf("currentInstruction read1Address = %d\n", instruction.read1Address);
+	printf("currentInstruction read2Address = %d\n", instruction.read2Address);
+	printf("currentInstruction writeAddressRType = %d\n", instruction.writeAddressRType);
+	printf("currentInstruction writeAddressIType = %d\n", instruction.writeAddressIType);
+	printf("currentInstruction shamt = %d\n", instruction.shamt);
+	printf("currentInstruction funct = %d\n", instruction.funct);
+	printf("currentInstruction immediate = %d\n", instruction.immediate);
+	printf("currentInstruction immediate 26 = %d\n", instruction.immediate_26);
 }
