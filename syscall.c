@@ -48,7 +48,7 @@ int syscall(ID_EX_buffer *ID_EX, struct cpu_context CPU) //num is the v0 registe
 	{
 		int integer1 = CPU.GPR[4]; //$a0 is 00100 or in this case CPU.GPR[4]
 		printf("%d\n", integer1);
-		setSignalsToZeroh(ID_EX);
+		setAllSignalsToZero(ID_EX);
 		return 0;
 	}
 	//Print String
@@ -71,21 +71,21 @@ int syscall(ID_EX_buffer *ID_EX, struct cpu_context CPU) //num is the v0 registe
 				break;
 			}
 		}
-		setSignalsToZeroh(ID_EX);
+		setAllSignalsToZero(ID_EX);
 		return 0;
 	}
 
 	if (num == 10)
 	{
 		sys_exit();
-		setSignalsToZeroh(ID_EX);
+		setAllSignalsToZero(ID_EX);
 		return 0;
 	}
 
 	return 0; //error case
 }
 
-uint32_t setSignalsToZeroh(ID_EX_buffer* ID_EX)
+uint32_t setAllSignalsToZero(ID_EX_buffer* ID_EX)
 {
 	//Made the signals of ID_EX.CUSignalType be 0
 	ID_EX->signals.exPhase.ALUSrc = 0;

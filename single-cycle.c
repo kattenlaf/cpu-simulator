@@ -33,12 +33,12 @@ enum ASCIINAVIGATIONII { ARROW = 224, LEFT = 75, RIGHT = 77, UP = 72, DOWN = 80,
 
 int main(int argc, char *argv[])
 {
-	stallCount = 0;
-	stallAmount = 0;
-	instructionCacheHit = 0;
-	instructionCacheMiss = 0;
-	dataCacheHit = 0;
-	dataCacheMiss = 0;
+	data_metrics.stallCount = 0;
+	data_metrics.stallAmount = 0;
+	data_metrics.instructionCacheHit = 0;
+	data_metrics.instructionCacheMiss = 0;
+	data_metrics.dataCacheHit = 0;
+	data_metrics.dataCacheMiss = 0;
 
 	FILE *loadManager;
 	struct IF_ID_buffer if_id;
@@ -53,11 +53,11 @@ int main(int argc, char *argv[])
 	initializeInstructionCache();
 
 	/* Initialize registers and memory to 0 */
-	cpu_ctx.PC = 536870912; // 0x20000000
+	cpu_ctx.PC = 0x20000000; // 0x20000000
 	for (i = 0; i < 32; i++) {
 		cpu_ctx.GPR[i] = 0;
 	}
-	cpu_ctx.GPR[29] = 268451840; //setting $sp to 0x10004000
+	cpu_ctx.GPR[29] = 0x10004000; //setting $sp to 0x10004000
 
 	for (i = 0; i < 1024; i++) {
 		instruction_memory[i] = 0;
@@ -73,7 +73,6 @@ int main(int argc, char *argv[])
 	loadManager = fopen("program.sim", "r");
 
 	for (i = 0; i < 1024; i++) {
-		//fread(&instruction_memory[i], sizeof(uint32_t), 1, loadManager);
 		fscanf(loadManager, "%s", fullWord);
 		fscanf(loadManager, "%s", lowerHalfWord);
 		strcat(fullWord, lowerHalfWord);
@@ -81,12 +80,11 @@ int main(int argc, char *argv[])
 
 
 #if defined(DEBUG)
-		//printf("%i\n", instruction_memory[i]);
+		printf("%i\n", instruction_memory[i]);
 #endif
 	}
 
 	for (i = 0; i < 1024; i++) {
-		//fread(&instruction_memory[i], sizeof(uint32_t), 1, loadManager);
 		fscanf(loadManager, "%s", fullWord);
 		fscanf(loadManager, "%s", lowerHalfWord);
 		strcat(fullWord, lowerHalfWord);
@@ -100,7 +98,7 @@ int main(int argc, char *argv[])
 
 	fclose(loadManager);
 
-	cpu_ctx.GPR[29] = 268443648; //set sp to base of stack
+	cpu_ctx.GPR[29] = 0x10002000; //set sp to base of stack
 
 	while (1) {
 #if defined(DEBUG)
@@ -108,36 +106,38 @@ int main(int argc, char *argv[])
 #endif
 
 #if defined(ENABLE_L1_CACHES)
-		if (stallAmount > 0)
+		if (data_metrics.stallAmount > 0)
 		{
-			stallCount++;
-			stallAmount--;
+			data_metrics.stallCount++;
+			data_metrics.stallAmount--;
 			continue;
-	}
-		fetch(&if_id);
-		if (if_id.instruction == 0) break;
+		}
+		fetch_with_cache(&if_id);
+		if (if_id.instruction == 0) {
+			break;
+		}
 		decode(&if_id, &id_ex);
 		execute(&id_ex, &ex_mem);
-		memory(&ex_mem, &mem_wb);
+		memory_with_cache(&ex_mem, &mem_wb);
 		writeback(&mem_wb);
 		cpu_ctx.PC = if_id.next_pc;
 }
-	printf("Instructions Executed: %d\n", totalInstructions);
+	printf("Instructions Executed: %d\n", data_metrics.totalInstructions);
 	printf("Instruction Cache:\n");
-	printf("Cache Accesses: %d\n", (instructionCacheHit + instructionCacheMiss));
-	printf("Cache Hits: %d\n", instructionCacheHit);
-	printf("Cache Misses: %d\n", instructionCacheMiss);
+	printf("Cache Accesses: %d\n", (data_metrics.instructionCacheHit + data_metrics.instructionCacheMiss));
+	printf("Cache Hits: %d\n", data_metrics.instructionCacheHit);
+	printf("Cache Misses: %d\n", data_metrics.instructionCacheMiss);
 
 	printf("Data Cache:\n");
-	printf("Cache Accesses: %d\n", (dataCacheHit + dataCacheMiss));
-	printf("Cache Hits: %d\n", dataCacheHit);
-	printf("Cache Misses: %d\n", dataCacheMiss);
+	printf("Cache Accesses: %d\n", (data_metrics.dataCacheHit + data_metrics.dataCacheMiss));
+	printf("Cache Hits: %d\n", data_metrics.dataCacheHit);
+	printf("Cache Misses: %d\n", data_metrics.dataCacheMiss);
 
-	printf("CPI: %f\n", ((float)(instructionCacheHit + stallCount) / (float)totalInstructions));
+	printf("CPI: %f\n", ((float)(data_metrics.instructionCacheHit + data_metrics.stallCount) / (float)data_metrics.totalInstructions));
 	// getchar();
 	return 0;
 #else
-		fetch2(&if_id);
+		fetch_no_cache(&if_id);
 		if (if_id.instruction == 0) break;
 		decode(&if_id, &id_ex);
 		execute(&id_ex, &ex_mem);
@@ -398,7 +398,7 @@ uint32_t PC_Counter(uint32_t PC)
 
 /*************************************************************/
 
-uint32_t rw_memory(uint32_t ALUresult, uint32_t data2, uint32_t MemWrite, uint32_t MemRead, uint32_t *memdata, uint32_t Mem[])
+uint32_t rw_memory_with_cache(uint32_t ALUresult, uint32_t data2, uint32_t MemWrite, uint32_t MemRead, uint32_t *memdata, uint32_t Mem[])
 {
 	int isFound = 1;
 	if ((MemWrite == 1 || MemRead == 1) && ALUresult % 4 != 0) // If address is bad, then return a halt condition
@@ -412,13 +412,13 @@ uint32_t rw_memory(uint32_t ALUresult, uint32_t data2, uint32_t MemWrite, uint32
 		findDataCacheValue(ALUresult, &isFound);
 		if (isFound == 1)
 		{
-			dataCacheHit++;
+			data_metrics.dataCacheHit++;
 			dataCacheWriteHit(ALUresult, data2);
 		}
 		else
 		{
-			stallAmount++;
-			dataCacheMiss++;
+			data_metrics.stallAmount++;
+			data_metrics.dataCacheMiss++;
 			dataCacheWriteMiss(ALUresult, data2);
 		}
 		//convertMemoryAddressToMemoryIndex(ALUresult);
@@ -442,46 +442,25 @@ uint32_t rw_memory(uint32_t ALUresult, uint32_t data2, uint32_t MemWrite, uint32
 	return 0;
 }
 
-uint32_t rw_memory2(uint32_t ALUresult, uint32_t data2, uint32_t MemWrite, uint32_t MemRead, uint32_t *memdata, uint32_t Mem[])
-
+uint32_t rw_memory_no_cache(uint32_t ALUresult, uint32_t data2, uint32_t MemWrite, uint32_t MemRead, uint32_t *memdata, uint32_t Mem[])
 {
-
-
-
 	if ((MemWrite == 1 || MemRead == 1) && ALUresult % 4 != 0) // If address is bad, then return a halt condition
-
 	{
-
 		//Memory call out of range
-
 		return 1;
-
 	}
-
 	//checks if MemWrite is 1. If it is, it sets memory of ALUresult to data2
-
 	if (MemWrite == 1)
-
 	{
-
 		convertMemoryAddressToMemoryIndex(ALUresult);
-
 		Mem[convertMemoryAddressToMemoryIndex(ALUresult)] = data2;
-
 	}
 
 	//checks if MemRead is 1. If it is, it sets the memory data to memory of ALUresult shifted 2-bits
-
 	if (MemRead == 1)
-
 	{
-
 		*memdata = Mem[convertMemoryAddressToMemoryIndex(ALUresult)];
-
 	}
-
-
-
 	return 0;
 
 }
@@ -571,7 +550,7 @@ int jump(struct IF_ID_buffer *in, InstructionComponents Instructions, ID_EX_buff
 	uint32_t first4bits = (in->next_pc & 4026531840); // PC and 11110000000000000000000000000000
 	uint32_t newAddress = (last28bits | first4bits);
 	in->next_pc = newAddress;
-	setSignalsToZeroh(out);
+	setAllSignalsToZero(out);
 	return 0;
 }
 
@@ -587,7 +566,7 @@ int jumpRegister(struct IF_ID_buffer* in, ID_EX_buffer* out)
 	if (cpu_ctx.GPR[31] != 0)
 	{
 		in->next_pc = cpu_ctx.GPR[31];
-		setSignalsToZeroh(out);
+		setAllSignalsToZero(out);
 	}
 	cpu_ctx.GPR[31] = 0;
 	return 0;
@@ -648,91 +627,91 @@ void placeBlock(uint32_t address)
 	switch (findWhichWord(address >> 2)) //LAST TWO BITS ARE ALWAYS 00, so shift to find where to place instruction
 	{
 	case(0):
-		L1_i_Cache[blockNum].word1 = instruction_memory[convertPCToInstructionIndex(address)];
-		L1_i_Cache[blockNum].word2 = instruction_memory[convertPCToInstructionIndex(address + 4)];
-		L1_i_Cache[blockNum].word3 = instruction_memory[convertPCToInstructionIndex(address + 8)];
-		L1_i_Cache[blockNum].word4 = instruction_memory[convertPCToInstructionIndex(address + 12)];
+		L1_instruction_cache[blockNum].word1 = instruction_memory[convertPCToInstructionIndex(address)];
+		L1_instruction_cache[blockNum].word2 = instruction_memory[convertPCToInstructionIndex(address + 4)];
+		L1_instruction_cache[blockNum].word3 = instruction_memory[convertPCToInstructionIndex(address + 8)];
+		L1_instruction_cache[blockNum].word4 = instruction_memory[convertPCToInstructionIndex(address + 12)];
 		//SET TAGS
-		L1_i_Cache[blockNum].tag1 = findTag(address);
-		L1_i_Cache[blockNum].tag2 = findTag(address + 4);
-		L1_i_Cache[blockNum].tag3 = findTag(address + 8);
-		L1_i_Cache[blockNum].tag4 = findTag(address + 12);
+		L1_instruction_cache[blockNum].tag1 = findTag(address);
+		L1_instruction_cache[blockNum].tag2 = findTag(address + 4);
+		L1_instruction_cache[blockNum].tag3 = findTag(address + 8);
+		L1_instruction_cache[blockNum].tag4 = findTag(address + 12);
 		break;
 	case(1):
-		L1_i_Cache[blockNum].word1 = instruction_memory[convertPCToInstructionIndex(address - 4)];
-		L1_i_Cache[blockNum].word2 = instruction_memory[convertPCToInstructionIndex(address)];
-		L1_i_Cache[blockNum].word3 = instruction_memory[convertPCToInstructionIndex(address + 4)];
-		L1_i_Cache[blockNum].word4 = instruction_memory[convertPCToInstructionIndex(address + 8)];
+		L1_instruction_cache[blockNum].word1 = instruction_memory[convertPCToInstructionIndex(address - 4)];
+		L1_instruction_cache[blockNum].word2 = instruction_memory[convertPCToInstructionIndex(address)];
+		L1_instruction_cache[blockNum].word3 = instruction_memory[convertPCToInstructionIndex(address + 4)];
+		L1_instruction_cache[blockNum].word4 = instruction_memory[convertPCToInstructionIndex(address + 8)];
 		//SET TAGS
-		L1_i_Cache[blockNum].tag1 = findTag(address - 4);
-		L1_i_Cache[blockNum].tag2 = findTag(address);
-		L1_i_Cache[blockNum].tag3 = findTag(address + 4);
-		L1_i_Cache[blockNum].tag4 = findTag(address + 8);
+		L1_instruction_cache[blockNum].tag1 = findTag(address - 4);
+		L1_instruction_cache[blockNum].tag2 = findTag(address);
+		L1_instruction_cache[blockNum].tag3 = findTag(address + 4);
+		L1_instruction_cache[blockNum].tag4 = findTag(address + 8);
 		break;
 	case(2):
-		L1_i_Cache[blockNum].word1 = instruction_memory[convertPCToInstructionIndex(address - 8)];
-		L1_i_Cache[blockNum].word2 = instruction_memory[convertPCToInstructionIndex(address - 4)];
-		L1_i_Cache[blockNum].word3 = instruction_memory[convertPCToInstructionIndex(address)];
-		L1_i_Cache[blockNum].word4 = instruction_memory[convertPCToInstructionIndex(address + 4)];
+		L1_instruction_cache[blockNum].word1 = instruction_memory[convertPCToInstructionIndex(address - 8)];
+		L1_instruction_cache[blockNum].word2 = instruction_memory[convertPCToInstructionIndex(address - 4)];
+		L1_instruction_cache[blockNum].word3 = instruction_memory[convertPCToInstructionIndex(address)];
+		L1_instruction_cache[blockNum].word4 = instruction_memory[convertPCToInstructionIndex(address + 4)];
 		//SET TAGS
-		L1_i_Cache[blockNum].tag1 = findTag(address - 8);
-		L1_i_Cache[blockNum].tag2 = findTag(address - 4);
-		L1_i_Cache[blockNum].tag3 = findTag(address);
-		L1_i_Cache[blockNum].tag4 = findTag(address + 4);
+		L1_instruction_cache[blockNum].tag1 = findTag(address - 8);
+		L1_instruction_cache[blockNum].tag2 = findTag(address - 4);
+		L1_instruction_cache[blockNum].tag3 = findTag(address);
+		L1_instruction_cache[blockNum].tag4 = findTag(address + 4);
 		break;
 	case(3):
-		L1_i_Cache[blockNum].word1 = instruction_memory[convertPCToInstructionIndex(address - 12)];
-		L1_i_Cache[blockNum].word2 = instruction_memory[convertPCToInstructionIndex(address - 8)];
-		L1_i_Cache[blockNum].word3 = instruction_memory[convertPCToInstructionIndex(address - 4)];
-		L1_i_Cache[blockNum].word4 = instruction_memory[convertPCToInstructionIndex(address)];
+		L1_instruction_cache[blockNum].word1 = instruction_memory[convertPCToInstructionIndex(address - 12)];
+		L1_instruction_cache[blockNum].word2 = instruction_memory[convertPCToInstructionIndex(address - 8)];
+		L1_instruction_cache[blockNum].word3 = instruction_memory[convertPCToInstructionIndex(address - 4)];
+		L1_instruction_cache[blockNum].word4 = instruction_memory[convertPCToInstructionIndex(address)];
 		//SET TAGS
-		L1_i_Cache[blockNum].tag1 = findTag(address - 12);
-		L1_i_Cache[blockNum].tag2 = findTag(address - 8);
-		L1_i_Cache[blockNum].tag3 = findTag(address - 4);
-		L1_i_Cache[blockNum].tag4 = findTag(address);
+		L1_instruction_cache[blockNum].tag1 = findTag(address - 12);
+		L1_instruction_cache[blockNum].tag2 = findTag(address - 8);
+		L1_instruction_cache[blockNum].tag3 = findTag(address - 4);
+		L1_instruction_cache[blockNum].tag4 = findTag(address);
 		break;
 	}
-	L1_i_Cache[blockNum].validBit = 1;
+	L1_instruction_cache[blockNum].validBit = 1;
 	//printBlock(blockNum);
 }
 
 void printBlock(uint32_t blockNum)
 {
-	printf("Instruction One %u\n", L1_i_Cache[blockNum].word1);
-	printf("Instruction Two %u\n", L1_i_Cache[blockNum].word2);
-	printf("Instruction Three %u\n", L1_i_Cache[blockNum].word3);
-	printf("Instruction Four %u\n", L1_i_Cache[blockNum].word4);
+	printf("Instruction One %u\n", L1_instruction_cache[blockNum].word1);
+	printf("Instruction Two %u\n", L1_instruction_cache[blockNum].word2);
+	printf("Instruction Three %u\n", L1_instruction_cache[blockNum].word3);
+	printf("Instruction Four %u\n", L1_instruction_cache[blockNum].word4);
 }
 
 int doesInstructionExist(uint32_t address)
 {
 	uint32_t blockNum = findBlockNumber(address);
-	if (L1_i_Cache[blockNum].validBit == 1)
+	if (L1_instruction_cache[blockNum].validBit == 1)
 	{
 		//CHECK IF FIRST 21 bits and last 2 bits if they are the same
 		//Instead of checking the instruction themselves are similar, check the tag of the address stored with tag of the address
 		switch (findWhichWord(address >> 2))
 		{
 		case(0):
-			if (findTag(address) == L1_i_Cache[blockNum].tag1)
+			if (findTag(address) == L1_instruction_cache[blockNum].tag1)
 			{
 				return 1;
 				break;
 			}
 		case(1):
-			if (findTag(address) == L1_i_Cache[blockNum].tag2)
+			if (findTag(address) == L1_instruction_cache[blockNum].tag2)
 			{
 				return 1;
 				break;
 			}
 		case(2):
-			if (findTag(address) == L1_i_Cache[blockNum].tag3)
+			if (findTag(address) == L1_instruction_cache[blockNum].tag3)
 			{
 				return 1;
 				break;
 			}
 		case(3):
-			if (findTag(address) == L1_i_Cache[blockNum].tag4)
+			if (findTag(address) == L1_instruction_cache[blockNum].tag4)
 			{
 				return 1;
 				break;
@@ -748,27 +727,27 @@ uint32_t getInstruction(uint32_t address)
 	switch (findWhichWord(address >> 2))
 	{
 	case 0:
-		if ( findTag(address) == L1_i_Cache[blockNum].tag1 )
+		if ( findTag(address) == L1_instruction_cache[blockNum].tag1 )
 		{
-			return L1_i_Cache[blockNum].word1;
+			return L1_instruction_cache[blockNum].word1;
 			break;
 		}
 	case(1):
-		if (findTag(address) == L1_i_Cache[blockNum].tag2)
+		if (findTag(address) == L1_instruction_cache[blockNum].tag2)
 		{
-			return L1_i_Cache[blockNum].word2;
+			return L1_instruction_cache[blockNum].word2;
 			break;
 		}
 	case(2):
-		if (findTag(address) == L1_i_Cache[blockNum].tag3)
+		if (findTag(address) == L1_instruction_cache[blockNum].tag3)
 		{
-			return L1_i_Cache[blockNum].word3;
+			return L1_instruction_cache[blockNum].word3;
 			break;
 		}
 	case(3):
-		if (findTag(address) == L1_i_Cache[blockNum].tag4)
+		if (findTag(address) == L1_instruction_cache[blockNum].tag4)
 		{
-			return L1_i_Cache[blockNum].word4;
+			return L1_instruction_cache[blockNum].word4;
 			break;
 		}
 	default:
@@ -785,23 +764,23 @@ void initializeDataCache()
 		for (int wordCycler = 0; wordCycler < 4; wordCycler++)
 		{
 			//all dirty bits are set to invalid
-			L1_d_Cache[setCycler].words[wordCycler].dirtyBit = 0;
+			L1_data_cache[setCycler].words[wordCycler].dirtyBit = 0;
 			//all valid bits are set to invalid
-			L1_d_Cache[setCycler].words[wordCycler].validBit = 0;
+			L1_data_cache[setCycler].words[wordCycler].validBit = 0;
 
 			switch (wordCycler)
 			{
 			case 0:
-				L1_d_Cache[setCycler].words[wordCycler].lruTimer = wordCycler;
+				L1_data_cache[setCycler].words[wordCycler].lruTimer = wordCycler;
 				break;
 			case 1:
-				L1_d_Cache[setCycler].words[wordCycler].lruTimer = wordCycler;
+				L1_data_cache[setCycler].words[wordCycler].lruTimer = wordCycler;
 				break;
 			case 2:
-				L1_d_Cache[setCycler].words[wordCycler].lruTimer = wordCycler;
+				L1_data_cache[setCycler].words[wordCycler].lruTimer = wordCycler;
 				break;
 			case 3:
-				L1_d_Cache[setCycler].words[wordCycler].lruTimer = wordCycler;
+				L1_data_cache[setCycler].words[wordCycler].lruTimer = wordCycler;
 				break;
 
 			default: //error case
@@ -815,7 +794,7 @@ void initializeInstructionCache()
 {
 	for (int lineCycler = 0; lineCycler < 128; lineCycler++)
 	{
-		L1_i_Cache[lineCycler].validBit = 0;
+		L1_instruction_cache[lineCycler].validBit = 0;
 	}
 }
 
@@ -833,19 +812,19 @@ void evictWord(uint32_t memAddress)
 	int evictedWord = 0;
 	for (int wordCycler = 0; wordCycler < 4; wordCycler++)
 	{
-		if (L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].lruTimer == 0)
+		if (L1_data_cache[findSetNumber(memAddress)].words[wordCycler].lruTimer == 0)
 		{
 			evictedWord = wordCycler;
 		}
 	}
 
-	if (L1_d_Cache[findSetNumber(memAddress)].words[evictedWord].lruTimer == 0)
+	if (L1_data_cache[findSetNumber(memAddress)].words[evictedWord].lruTimer == 0)
 	{
-		if (L1_d_Cache[findSetNumber(memAddress)].words[evictedWord].dirtyBit == 1)
+		if (L1_data_cache[findSetNumber(memAddress)].words[evictedWord].dirtyBit == 1)
 		{
-			data_memory[convertMemoryAddressToMemoryIndex(memAddress)] = L1_d_Cache[findSetNumber(memAddress)].words[evictedWord].wordContent;
-			L1_d_Cache[findSetNumber(memAddress)].words[evictedWord].dirtyBit = 0;
-			L1_d_Cache[findSetNumber(memAddress)].words[evictedWord].validBit = 0;
+			data_memory[convertMemoryAddressToMemoryIndex(memAddress)] = L1_data_cache[findSetNumber(memAddress)].words[evictedWord].wordContent;
+			L1_data_cache[findSetNumber(memAddress)].words[evictedWord].dirtyBit = 0;
+			L1_data_cache[findSetNumber(memAddress)].words[evictedWord].validBit = 0;
 		}
 	}
 }
@@ -874,20 +853,20 @@ void addToSetCache(uint32_t memAddress, uint32_t memValue)
 
 	for (int wordCycler = 0; wordCycler < 4; wordCycler++)
 	{
-		if (L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].lruTimer == 0)
+		if (L1_data_cache[findSetNumber(memAddress)].words[wordCycler].lruTimer == 0)
 		{
 			targetWord = wordCycler;
 		}
 	}
 
-	L1_d_Cache[findSetNumber(memAddress)].words[targetWord].wordContent = memValue;
-	L1_d_Cache[findSetNumber(memAddress)].words[targetWord] = convertMemoryAddresstoSetComponents(L1_d_Cache[findSetNumber(memAddress)].words[targetWord], memAddress);
-	L1_d_Cache[findSetNumber(memAddress)].words[targetWord].lruTimer = 4;
-	L1_d_Cache[findSetNumber(memAddress)].words[targetWord].validBit = 1;
+	L1_data_cache[findSetNumber(memAddress)].words[targetWord].wordContent = memValue;
+	L1_data_cache[findSetNumber(memAddress)].words[targetWord] = convertMemoryAddresstoSetComponents(L1_data_cache[findSetNumber(memAddress)].words[targetWord], memAddress);
+	L1_data_cache[findSetNumber(memAddress)].words[targetWord].lruTimer = 4;
+	L1_data_cache[findSetNumber(memAddress)].words[targetWord].validBit = 1;
 
 	for (int wordCycler = 0; wordCycler < 4; wordCycler++)
 	{
-		L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].lruTimer--;
+		L1_data_cache[findSetNumber(memAddress)].words[wordCycler].lruTimer--;
 	}
 }
 
@@ -896,19 +875,19 @@ void updateDataCacheWord(uint32_t memAddress)
 	int preservationValue = 0;
 	for (int wordCycler = 0; wordCycler < 4; wordCycler++)
 	{
-		if ((L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].tag == ((memAddress & 4294965248) >> 11)) &&
-			(L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].offset == (memAddress & 15)))
+		if ((L1_data_cache[findSetNumber(memAddress)].words[wordCycler].tag == ((memAddress & 4294965248) >> 11)) &&
+			(L1_data_cache[findSetNumber(memAddress)].words[wordCycler].offset == (memAddress & 15)))
 		{
-			preservationValue = L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].lruTimer;
-			L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].lruTimer = 4;
+			preservationValue = L1_data_cache[findSetNumber(memAddress)].words[wordCycler].lruTimer;
+			L1_data_cache[findSetNumber(memAddress)].words[wordCycler].lruTimer = 4;
 			break;
 		}
 	}
 	for (int wordCycler = 0; wordCycler < 4; wordCycler++)
 	{
-		if ((int) L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].lruTimer > preservationValue)
+		if ((int) L1_data_cache[findSetNumber(memAddress)].words[wordCycler].lruTimer > preservationValue)
 		{
-			L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].lruTimer--;
+			L1_data_cache[findSetNumber(memAddress)].words[wordCycler].lruTimer--;
 		}
 	}
 
@@ -918,12 +897,12 @@ uint32_t findDataCacheValue(uint32_t memAddress, int *isFound)
 {
 	for (int wordCycler = 0; wordCycler < 4; wordCycler++)
 	{
-		if ((L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].tag == ((memAddress & 4294965248) >> 11)) &&
-			(L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].offset == (memAddress & 15)) &&
-			(L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].validBit == 1))
+		if ((L1_data_cache[findSetNumber(memAddress)].words[wordCycler].tag == ((memAddress & 4294965248) >> 11)) &&
+			(L1_data_cache[findSetNumber(memAddress)].words[wordCycler].offset == (memAddress & 15)) &&
+			(L1_data_cache[findSetNumber(memAddress)].words[wordCycler].validBit == 1))
 		{
 			(*isFound) = 0;
-			return (L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].wordContent);
+			return (L1_data_cache[findSetNumber(memAddress)].words[wordCycler].wordContent);
 		}
 	}
 	(*isFound) = 0;
@@ -943,11 +922,11 @@ int modifyDataCacheWord(uint32_t memAddress, uint32_t updatedValue)
 {
 	for (int wordCycler = 0; wordCycler < 4; wordCycler++)
 	{
-		if ((L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].tag == ((memAddress & 4294965248) >> 11)) &&
-			(L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].offset == (memAddress & 15)))
+		if ((L1_data_cache[findSetNumber(memAddress)].words[wordCycler].tag == ((memAddress & 4294965248) >> 11)) &&
+			(L1_data_cache[findSetNumber(memAddress)].words[wordCycler].offset == (memAddress & 15)))
 		{
-			L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].wordContent = updatedValue;
-			L1_d_Cache[findSetNumber(memAddress)].words[wordCycler].dirtyBit = 1;
+			L1_data_cache[findSetNumber(memAddress)].words[wordCycler].wordContent = updatedValue;
+			L1_data_cache[findSetNumber(memAddress)].words[wordCycler].dirtyBit = 1;
 		}
 	}
 	return 0;

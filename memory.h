@@ -45,9 +45,9 @@ typedef struct
 }AssociativeBlock;
 
 
-extern block L1_i_Cache[128]; /* 2 KiB = 128 * 128bits */
+extern block L1_instruction_cache[128]; /* 2 KiB = 128 * 128bits */
 
-extern AssociativeBlock L1_d_Cache[128]; /* 2 KiB = 128 sets * 4*32bit addresses */
+extern AssociativeBlock L1_data_cache[128]; /* 2 KiB = 128 sets * 4*32bit addresses */
 
 
 AssociativeWord convertMemoryAddresstoSetComponents(AssociativeWord passedWord, uint32_t memAddress);

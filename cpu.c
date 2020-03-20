@@ -14,55 +14,46 @@
 struct cpu_context cpu_ctx;
 int instructionExists;
 
-int fetch(struct IF_ID_buffer *out)
+// * Access the cpu cache and locate the instruction if it exists
+// * If it doesn't stall and place the instruction block
+int fetch_with_cache(struct IF_ID_buffer *out)
 {
-	//ACCESS CACHE FIRST, does cache store instruction or address to the instruction
-	if (doesInstructionExist(cpu_ctx.PC) == 1)
+	if (doesInstructionExist(cpu_ctx.PC))
 	{
-		totalInstructions++;
-		instructionCacheHit++;
-		// TODO: GET INSTRUCTION
-		(*out).instruction = getInstruction(cpu_ctx.PC);
-		//printf("The instruction is : %u\n", getInstruction(cpu_ctx.PC));
-		//printf("Instruction Grabbed\n");
-		(*out).next_pc = cpu_ctx.PC + 4;
+		data_metrics.totalInstructions++;
+		data_metrics.instructionCacheHit++;
+		out->instruction = getInstruction(cpu_ctx.PC);
+		out->next_pc = cpu_ctx.PC + 4;
 	}
 	else
 	{
-		stallCount++;
-		instructionCacheMiss++;
-		//STALL AND PLACE BLOCK? HOWEVER YOU WANT IT
+		data_metrics.stallCount++;
+		data_metrics.instructionCacheMiss++;
 		placeBlock(cpu_ctx.PC);
-		//(*out).instruction = instruction_memory[convertPCToInstructionIndex(cpu_ctx.PC)];
-		//Stall 
-		(*out).next_pc = cpu_ctx.PC;
+		out->next_pc = cpu_ctx.PC;
 	}
-
-	//(*out).instruction = instruction_memory[convertPCToInstructionIndex(cpu_ctx.PC)];
-	//printf("The instruction is %u\n", (*out).instruction);
-	//(*out).next_pc = cpu_ctx.PC + 4;
 	return 0;
 }
 
-int fetch2(struct IF_ID_buffer *out)
+int fetch_no_cache(struct IF_ID_buffer *out)
 {
-	(*out).instruction = instruction_memory[convertPCToInstructionIndex(cpu_ctx.PC)];
-	(*out).next_pc = cpu_ctx.PC + 4;
+	out->instruction = instruction_memory[convertPCToInstructionIndex(cpu_ctx.PC)];
+	out->next_pc = cpu_ctx.PC + 4;
 	return 0;
 }
 
 int decode(struct IF_ID_buffer *in, ID_EX_buffer *out)
 {
-	setSignalsToZeroh(out);
+	setAllSignalsToZero(out);
 	InstructionComponents currentInstruction;
-	currentInstruction = separateComponents((*in).instruction);
-	(*out).writeAddressIType = currentInstruction.writeAddressIType;
-	(*out).writeAddressRType = currentInstruction.writeAddressRType;
-	(*out).extendedImmediate = signExtendValue(currentInstruction.immediate);
-	(*out).signals = generateControlSignals(currentInstruction.opCode);
+	currentInstruction = separateComponents(in->instruction);
+	out->writeAddressIType = currentInstruction.writeAddressIType;
+	out->writeAddressRType = currentInstruction.writeAddressRType;
+	out->extendedImmediate = signExtendValue(currentInstruction.immediate);
+	out->signals = generateControlSignals(currentInstruction.opCode);
 	*out = updateReadValues(currentInstruction, *out, cpu_ctx.GPR);
-	(*out).opCode = currentInstruction.opCode;
-	(*out).funct = currentInstruction.funct;
+	out->opCode = currentInstruction.opCode;
+	out->funct = currentInstruction.funct;
 
 	if (currentInstruction.read1Address == 31 && currentInstruction.funct == 8) // jr $ra
 	{
@@ -104,22 +95,22 @@ int execute(ID_EX_buffer *in, struct EX_MEM_buffer *out)
 
 
 
-int memory(struct EX_MEM_buffer* in, struct MEM_WB_buffer* out)
+int memory_with_cache(struct EX_MEM_buffer* in, struct MEM_WB_buffer* out)
 {
 	out->ALUresult = in->address; //Address is stored in the MEM_
 	(*out).memdata = (*in).address; // not sure if a fix
-	rw_memory(in->address, in->writeData, in->signals.memPhase.MemWrite, in->signals.memPhase.MemRead, &out->memdata, data_memory);
+	rw_memory_with_cache(in->address, in->writeData, in->signals.memPhase.MemWrite, in->signals.memPhase.MemRead, &out->memdata, data_memory);
 	(*out).writeAddressIType = (*in).writeAddressIType;
 	(*out).writeAddressRType = (*in).writeAddressRType;
 	(*out).signals = (*in).signals;
 	return 0;
 }
 
-int memory2(struct EX_MEM_buffer* in, struct MEM_WB_buffer* out)
+int memory_no_cache(struct EX_MEM_buffer* in, struct MEM_WB_buffer* out)
 {
 	out->ALUresult = in->address; //Address is stored in the MEM_
 	(*out).memdata = (*in).address; // not sure if a fix
-	rw_memory2(in->address, in->writeData, in->signals.memPhase.MemWrite, in->signals.memPhase.MemRead, &out->memdata, data_memory);
+	rw_memory_no_cache(in->address, in->writeData, in->signals.memPhase.MemWrite, in->signals.memPhase.MemRead, &out->memdata, data_memory);
 	(*out).writeAddressIType = (*in).writeAddressIType;
 	(*out).writeAddressRType = (*in).writeAddressRType;
 	(*out).signals = (*in).signals;
