@@ -106,7 +106,7 @@ struct MEM_WB_buffer {
 	uint32_t writeAddressIType;
 };
 
-typedef struct data_metric_handling {
+typedef struct {
 	int stallCount;
 	int stallAmount;
 	int instructionCacheHit;

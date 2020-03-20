@@ -80,7 +80,9 @@ int main(int argc, char *argv[])
 
 
 #if defined(DEBUG)
-		printf("%i\n", instruction_memory[i]);
+		if (instruction_memory[i] != 0) {
+			printf("%X\n", instruction_memory[i]);
+		}
 #endif
 	}
 
@@ -92,7 +94,9 @@ int main(int argc, char *argv[])
 
 
 #if defined(DEBUG)
-		printf("%i\n", instruction_memory[i]);
+		if (data_memory[i] != 0) {
+			printf("%X\n", data_memory[i]);
+		}
 #endif
 	}
 
@@ -102,7 +106,7 @@ int main(int argc, char *argv[])
 
 	while (1) {
 #if defined(DEBUG)
-		printf("FETCH from PC=%x\n", cpu_ctx.PC);
+		printf("FETCH from PC=%X\n", cpu_ctx.PC);
 #endif
 
 #if defined(ENABLE_L1_CACHES)
@@ -122,13 +126,12 @@ int main(int argc, char *argv[])
 		writeback(&mem_wb);
 		cpu_ctx.PC = if_id.next_pc;
 }
-	printf("Instructions Executed: %d\n", data_metrics.totalInstructions);
-	printf("Instruction Cache:\n");
+	printf("-------------------------\nInstructions Executed: %d\n------------------\n", data_metrics.totalInstructions);
+	printf("Instruction Cache:\n------------------\n");
 	printf("Cache Accesses: %d\n", (data_metrics.instructionCacheHit + data_metrics.instructionCacheMiss));
 	printf("Cache Hits: %d\n", data_metrics.instructionCacheHit);
-	printf("Cache Misses: %d\n", data_metrics.instructionCacheMiss);
-
-	printf("Data Cache:\n");
+	printf("Cache Misses: %d\n-----------\n", data_metrics.instructionCacheMiss);
+	printf("Data Cache:\n-----------\n");
 	printf("Cache Accesses: %d\n", (data_metrics.dataCacheHit + data_metrics.dataCacheMiss));
 	printf("Cache Hits: %d\n", data_metrics.dataCacheHit);
 	printf("Cache Misses: %d\n", data_metrics.dataCacheMiss);
@@ -141,7 +144,7 @@ int main(int argc, char *argv[])
 		if (if_id.instruction == 0) break;
 		decode(&if_id, &id_ex);
 		execute(&id_ex, &ex_mem);
-		memory2(&ex_mem, &mem_wb);
+		memory_no_cache(&ex_mem, &mem_wb);
 		writeback(&mem_wb);
 		cpu_ctx.PC = if_id.next_pc;
 #endif

@@ -120,6 +120,5 @@ int memory_no_cache(struct EX_MEM_buffer* in, struct MEM_WB_buffer* out)
 int writeback(struct MEM_WB_buffer *in)
 {
 	write_register((*in).writeAddressIType, (*in).writeAddressRType, in->memdata, in->ALUresult, in->signals.writeBackPhase.RegWrite, in->signals.exPhase.RegDst, in->signals.writeBackPhase.MemtoReg, cpu_ctx.GPR);
-
 	return 0;
 }
