@@ -57,13 +57,12 @@ int main(int argc, char *argv[])
 	for (i = 0; i < 32; i++) {
 		cpu_ctx.GPR[i] = 0;
 	}
-	cpu_ctx.GPR[29] = 0x10004000; //setting $sp to 0x10004000
 
 	for (i = 0; i < 1024; i++) {
 		instruction_memory[i] = 0;
 		stack_memory[i] = 0;
 	}
-	for (i = 0; i < 2048; i++)
+	for (i = 0; i < 1024; i++)
 	{
 		data_memory[i] = 0;
 	}
@@ -102,7 +101,7 @@ int main(int argc, char *argv[])
 
 	fclose(loadManager);
 
-	cpu_ctx.GPR[29] = 0x10002000; //set sp to base of stack
+	cpu_ctx.GPR[29] = 0x20000000; //set sp to base of stack
 
 	while (1) {
 #if defined(DEBUG)
@@ -536,7 +535,7 @@ int convertPCToInstructionIndex(int givenPCValue)
 
 int convertMemoryAddressToMemoryIndex(uint32_t passedAddress)
 {
-	int index = (passedAddress - 268435456) / 4; //mem starts at 0x10000000
+	int index = (passedAddress - 0x10000000) / 4; //mem starts at 0x10000000
 	return index;
 }
 
@@ -615,19 +614,9 @@ uint32_t findSetNumber(uint32_t address)
 // PLACE ONE FULL BLOCK AT A TIME, that is 4 instructions
 //METADATA BITS = tag bits + 1 valid bit
 
-
-// IF INSTRUCTIONS ARE STORED AND NOT ADDRESS
-
 void placeBlock(uint32_t address)
 {
-	//printf("Placing block\n");
 	uint32_t blockNum = findBlockNumber(address);
-	//printf("The block number is %u\n", blockNum);
-	/*
-	printf("The tag is %u\n", findTag(address));
-	printf("The tag is %u\n", findTag(address + 4));
-	printf("The tag is %u\n", findTag(address + 8));
-	printf("The tag is %u\n", findTag(address + 12)); */
 	switch (findWhichWord(address >> 2)) //LAST TWO BITS ARE ALWAYS 00, so shift to find where to place instruction
 	{
 	case(0):

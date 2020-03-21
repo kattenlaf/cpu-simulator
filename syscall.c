@@ -46,8 +46,8 @@ int syscall(ID_EX_buffer *ID_EX, struct cpu_context CPU) //num is the v0 registe
 
 	if (num == 1)
 	{
-		int integer1 = CPU.GPR[4]; //$a0 is 00100 or in this case CPU.GPR[4]
-		printf("%d\n", integer1);
+		int integer = CPU.GPR[4]; //$a0 is 00100 or in this case CPU.GPR[4]
+		printf("%d\n", integer);
 		setAllSignalsToZero(ID_EX);
 		return 0;
 	}
@@ -59,7 +59,6 @@ int syscall(ID_EX_buffer *ID_EX, struct cpu_context CPU) //num is the v0 registe
 										// Assuming that the address index will convert by design
 
 		CharAddr = convertMemoryAddressToMemoryIndex(CharAddr); //Making this be the address of the characters in data_mem assuming it will convert by design
-		printf("Char address is %X\n", CharAddr);
 		char letter = data_memory[CharAddr];
 
 		while (1)
